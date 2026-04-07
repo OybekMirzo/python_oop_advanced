@@ -8,7 +8,7 @@ class Student:
         self.name = name
         self.student_id = student_id
         self.gpa = gpa
-Copy
+
 Notice how each attribute name is written three times: once in the parameter list, once as self.name, and once as the assigned value. For three attributes, that is nine repetitions just in __init__. A class with ten attributes would require thirty repetitions — and that does not even include __repr__ or __eq__.
 
 A proper Student class with __init__, __repr__, and __eq__ looks like this:
@@ -28,7 +28,7 @@ class Student:
         return (self.name == other.name and 
                 self.student_id == other.student_id and 
                 self.gpa == other.gpa)
-Copy
+
 Nothing here is surprising — it is all predictable, mechanical code. What if the same class could be written in just five lines?
 
 The dataclasses Module
@@ -41,7 +41,7 @@ class Student:
     name: str
     student_id: str
     gpa: float
-Copy
+
 Although these look like class variables, the @dataclass decorator turns them into instance variables by automatically generating an __init__ method that saves them via self. Each variable must include a type annotation.
 
 This single decorator automatically provides __init__, __repr__, and __eq__:
@@ -51,7 +51,7 @@ s2 = Student("Alisher", "2024001", 3.8)
 
 print(s1)          # Student(name='Alisher', student_id='2024001', gpa=3.8)
 print(s1 == s2)    # True
-Copy
+
 How @dataclass Works Under the Hood
 Recall that a decorator is a function that takes something and returns a modified version of it. The @dataclass decorator takes your class and returns a modified version with auto-generated methods. Since everything in Python is an object — including classes — they can be passed as parameters.
 
@@ -108,7 +108,7 @@ def my_dataclass(cls):
 
     # Return the newly modified class!
     return cls
-Copy
+
 Default Values
 Fields can have default values, specified after the type annotation:
 
@@ -120,17 +120,17 @@ class Student:
     student_id: str
     gpa: float = 0.0
     year: int = 1
-Copy
+
 s = Student("Sevara", "2024015")
 print(s)  # Student(name='Sevara', student_id='2024015', gpa=0.0, year=1)
-Copy
+
 Important rule: Fields with default values must come after fields without defaults. This is the same rule Python applies to function parameters. If a parameter has a default value, all parameters after it must also have defaults. Otherwise, Python cannot determine which argument maps to which parameter.
 
 @dataclass
 class Student:
     name: str = "Unknown"   # has default
     student_id: str          # no default — ERROR!
-Copy
+
 This raises a TypeError: non-default argument 'student_id' follows default argument.
 
 Mutable Default Values and field()
@@ -140,7 +140,7 @@ Using a mutable object like a list as a default value is not allowed in dataclas
 class Student:
     name: str
     grades: list = []  # ValueError!
-Copy
+
 Python raises ValueError: mutable default <class 'list'> for field grades is not allowed: use default_factory. The decorator actively prevents the shared-mutable-default bug.
 
 To safely provide a mutable default, import the field function and use default_factory:
@@ -152,7 +152,7 @@ class Student:
     name: str
     student_id: str
     grades: list = field(default_factory=list)
-Copy
+
 This tells Python: every time a new Student is created, call list() to produce a fresh empty list. Each object gets its own list — no sharing.
 
 Note that list is passed without parentheses — it is the function itself being passed, not its result. The dataclass will call it later when needed. Writing default_factory=lambda: [] achieves the same result.
@@ -166,7 +166,7 @@ s1.grades.append(90)
 
 print(s1.grades)  # [90]
 print(s2.grades)  # [] — safe! not shared
-Copy
+
 Use field(default_factory=...) any time the default value is a list, dict, set, or any other mutable object.
 
 Adding Methods to a Dataclass
@@ -187,7 +187,7 @@ class Student:
 
     def is_passing(self):
 	    return self.gpa >= 60
-Copy
+
 s = Student("Alisher", "2024001")
 s.add_grade(95)
 s.add_grade(88)
@@ -197,7 +197,7 @@ print(s)
 # Student(name='Alisher', student_id='2024001', gpa=91.666..., grades=[95, 88, 92])
 
 print(s.is_passing())  # True
-Copy
+
 @dataclass handles the boring parts so you can focus on the interesting ones.
 
 Frozen (Immutable) Dataclasses
@@ -209,12 +209,12 @@ from dataclasses import dataclass
 class Point:
     x: float
     y: float
-Copy
+
 p = Point(3.0, 4.0)
 print(p)        # Point(x=3.0, y=4.0)
 
 p.x = 10.0     # FrozenInstanceError!
-Copy
+
 Setting frozen=True makes the object immutable — no attribute can be changed after creation. Any attempt raises a FrozenInstanceError.
 
 Why is this useful?
@@ -226,7 +226,7 @@ p2 = Point(1.0, 2.0)
 
 locations = {p1: "Tashkent", p2: "Samarkand"}
 print(locations[p1])  # "Tashkent"
-Copy
+
 Regular classes and regular dataclasses cannot be used as dictionary keys because mutable objects are not hashable by default.
 
 Hashability means Python can compute a fixed number (a hash) from the object. This hash is used for fast lookups in dict and set. If an object can change, its hash could change too, breaking lookups. Therefore, Python only allows immutable objects to be hashable. Setting frozen=True guarantees the object will not change, making it hashable.
@@ -243,12 +243,12 @@ class Rectangle:
     width: float
     height: float
     area: float = field(init=False)  # not a constructor parameter
-Copy
+
 Now area will not appear in __init__, so you create a rectangle with just Rectangle(5.0, 3.0). But area still needs a value — this is where __post_init__ comes in. It is a special method that runs immediately after the auto-generated __init__ finishes:
 
     def __post_init__(self):
         self.area = self.width * self.height
-Copy
+
 The sequence of events when you write Rectangle(5.0, 3.0):
 
 Python calls the auto-generated __init__, which sets width and height.
@@ -257,11 +257,11 @@ Inside __post_init__, area is calculated.
 r = Rectangle(5.0, 3.0)
 print(r)  # Rectangle(width=5.0, height=3.0, area=15.0)
 print(r.area)  # 15.0
-Copy
+
 Note that area appears in the __repr__ output. Normally, __repr__ shows how to recreate the object, but trying Rectangle(5.0, 3.0, 15.0) would raise an error since area is not a constructor parameter. If you want to be strictly accurate, you can hide it with repr=False:
 
 area: float = field(init=False, repr=False)
-Copy
+
 Why declare area as a field instead of just assigning it in __post_init__? You could simply write self.area = self.width * self.height in __post_init__ without declaring it as a field. However, if area is not declared as a field, the dataclass does not know about it — it will not appear in __repr__ and will not be used in __eq__ comparisons. Using field(init=False) makes area a proper dataclass field, included in both __repr__ and __eq__.
 
 Ordering with order=True
@@ -274,7 +274,7 @@ class Student:
     gpa: float
     name: str  
     student_id: str 
-Copy
+
 Ordering is the ability to compare two objects. Think of five students standing in no particular arrangement — there is no order. Now ask them to line up from lowest GPA to highest, and you have an order that allows comparison.
 
 How the comparison methods work: The generated methods put all attributes into a tuple in the order they are defined, and compare the tuples. Recall how tuple comparison works in Python:
@@ -288,7 +288,7 @@ def __lt__(self, other):
         return NotImplemented
     # It compares them as if they were tuples of their fields
     return (self.gpa, self.name, self.student_id) < (other.gpa, other.name, other.student_id)
-Copy
+
 Field order matters. The first field becomes the primary sort key. If the first fields are equal, comparison moves to the second field, and so on.
 
 from dataclasses import dataclass
@@ -298,7 +298,7 @@ class Student:
     gpa: float        # Primary sort key
     name: str         # Secondary (tie-breaker)
     student_id: str   # Final tie-breaker
-Copy
+
 s1 = Student(3.8, "Alisher", "2024001")
 s2 = Student(3.5, "Sevara", "2024015")
 
@@ -308,7 +308,7 @@ students = [s1, s2, Student(3.8, "Zafar", "2024020")]
 print(sorted(students))
 # Sorted by gpa first, then name. 
 # "Alisher" (3.8) will come before "Zafar" (3.8).
-Copy
+
 When to Use Dataclasses
 Use @dataclass when your class is primarily about storing data and you are comfortable with auto-generated magic methods.
 Use a regular class when your class is primarily about behavior or you need fine-grained control over its methods.
@@ -319,7 +319,7 @@ names: list[str] = ["Alisher", "Sevara", "Jasur"]
 scores: dict[str, int] = {"Alisher": 95, "Sevara": 88}
 coordinates: tuple[float, float] = (41.2995, 69.2401)
 unique_ids: set[int] = {101, 102, 103}
-Copy
+
 For more complex nested data:
 
 all_grades: list[list[int]] = [[90, 85, 88], [76, 92], [100, 95, 89, 91]]
@@ -335,18 +335,18 @@ course_results: dict[str, dict[str, int]] = {
     "OOP": {"Alisher": 90, "Sevara": 85},
     "Calculus": {"Alisher": 78, "Jasur": 92},
 }
-Copy
+
 Optional and Union Types
 When a value might be None, use the union syntax:
 
 def get_phone(student_id: str) -> str | None:
     ...
-Copy
+Cop
 When a value can be one of several types:
 
 def find_student(identifier: str | int):
     ...
-Copy
+
 Combining Dataclasses with Type Hints
 Here is a complete example bringing everything together:
 
@@ -360,7 +360,7 @@ class Student:
     grades: list[int] = field(default_factory=list)
     email: str | None = None
     courses: dict[str, str] = field(default_factory=dict)
-Copy
+
 s = Student(
     name="Nodira",
     student_id="2024030",
@@ -369,7 +369,7 @@ s = Student(
     email="nodira@alkhu.uz",
     courses={"CS201": "OOP", "MATH101": "Calculus"}
 )
-Copy
+
 Forward References
 Consider a class that references itself:
 
@@ -377,14 +377,14 @@ Consider a class that references itself:
 class Employee:
     name: str
     manager: Employee  # ERROR!
-Copy
+
 When Python encounters manager: Employee, the Employee class is not yet fully defined — it raises a NameError. The fix is to use a string instead:
 
 @dataclass
 class Employee:
     name: str
     manager: 'Employee'  # OK — forward reference
-Copy
+
 By using a string, you tell Python: “do not resolve this name now; check it later.” This is called a forward reference.
 
 Forward references are needed in two situations:
@@ -398,7 +398,7 @@ class Gradebook:
 @dataclass
 class Student:
     name: str
-Copy
+
 Type-Hinting Callable Objects
 Functions passed as arguments can also be type-hinted using Callable from the typing module:
 
@@ -411,5 +411,5 @@ def add(a: int, b: int) -> int:
     return a + b
 
 result = apply_operation(5, 3, add)  # 8
-Copy
+
 Callable[[int, int], int] means a function that takes two int parameters and returns an int. The first part (inside the inner brackets) specifies the parameter types, and the second part specifies the return type.
