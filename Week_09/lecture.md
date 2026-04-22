@@ -341,7 +341,7 @@ When a value might be None, use the union syntax:
 
 def get_phone(student_id: str) -> str | None:
     ...
-Cop
+
 When a value can be one of several types:
 
 def find_student(identifier: str | int):
@@ -413,3 +413,4 @@ def add(a: int, b: int) -> int:
 result = apply_operation(5, 3, add)  # 8
 
 Callable[[int, int], int] means a function that takes two int parameters and returns an int. The first part (inside the inner brackets) specifies the parameter types, and the second part specifies the return type.
+

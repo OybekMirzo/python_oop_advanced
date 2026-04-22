@@ -1,0 +1,18 @@
+class RepeatWord:
+    def __init__(self, word, n):
+        self.word = word
+        self.n = n
+        self.count = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.count < self.n:
+            self.count += 1
+            return self.word
+        else:
+            raise StopIteration
+        
+for w in RepeatWord('Hello', 4):
+    print(w)

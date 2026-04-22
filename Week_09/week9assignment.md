@@ -10,7 +10,6 @@ You are building a production planning tool for a factory. Create a Component da
 6. Add a method price_per_item(self) -> float that returns total_price / batch_size.
 7. Add a method scale(self, new_batch_size: int) that adjusts every component’s units proportionally to the new batch size, updates batch_size, and recalculates total_price.
 8. Add a method display(self) -> str that returns a formatted summary. Study the expected output to determine the exact format.
-Always add a helper method called `_refresh(self)` that recalculates all computed fields and call it from every method that changes data
 
 Input
 a = Assembly("Drone", 8)
